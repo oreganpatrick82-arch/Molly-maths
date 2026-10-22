@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Molly's Maths</title>
+<meta name="description" content="Molly's Division Challenge: long division practice following the Irish primary maths curriculum.">
+<meta name="theme-color" content="#14121E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Molly's Maths">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Fredoka:wght@400..600&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: a dashboard (hero sheet, estimate + four moves, 100-tile progress map by curriculum level) and a play screen where a squared-copy page sits beside a prompt card and keypad. Each step owns one ink colour. */
+:root{
+  --bg:#F1EFF9; --paper:#FFFFFF; --grid:#DCE3F2; --card:#FFFFFF; --soft:#E8E4F6; --line:#DFDAF0;
+  --ink:#24203A; --muted:#67628A; --on-accent:#FFFFFF;
+  --div:#6C43EE; --div-deep:#4A26C2; --div-soft:#EDE7FF; --div-mid:#CBB9FF;
+  --mul:#0A938E; --mul-soft:#DBF4F1;
+  --sub:#E3405F; --sub-soft:#FDE5EA;
+  --bring:#D98200; --bring-soft:#FFF0D4;
+  --est:#2766D6; --est-soft:#E3ECFD;
+  --star:#F3AD12; --bad:#C92F4B; --bad-soft:#FDE8EC;
+  --shadow:0 1px 0 rgba(36,32,58,.04),0 10px 28px -14px rgba(76,48,170,.32);
+  --f-display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-num:'Fredoka','Nunito',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14121E; --paper:#1D1A2B; --grid:#2B2840; --card:#1F1C2E; --soft:#2A2640; --line:#332E4C;
+  --ink:#EDEAF8; --muted:#A49FC0; --on-accent:#16121F;
+  --div:#A88BFF; --div-deep:#7458D6; --div-soft:#2C2450; --div-mid:#4C3B92;
+  --mul:#36D2C0; --mul-soft:#16353A;
+  --sub:#FF7590; --sub-soft:#3D1F2C;
+  --bring:#FFBE3D; --bring-soft:#3A2D15;
+  --est:#7FAAFF; --est-soft:#1C2A48;
+  --star:#FFC531; --bad:#FF7590; --bad-soft:#3D1F2C;
+  --shadow:0 1px 0 rgba(0,0,0,.2),0 12px 30px -14px rgba(0,0,0,.6);
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#14121E; --paper:#1D1A2B; --grid:#2B2840; --card:#1F1C2E; --soft:#2A2640; --line:#332E4C;
+  --ink:#EDEAF8; --muted:#A49FC0; --on-accent:#16121F;
+  --div:#A88BFF; --div-deep:#7458D6; --div-soft:#2C2450; --div-mid:#4C3B92;
+  --mul:#36D2C0; --mul-soft:#16353A;
+  --sub:#FF7590; --sub-soft:#3D1F2C;
+  --bring:#FFBE3D; --bring-soft:#3A2D15;
+  --est:#7FAAFF; --est-soft:#1C2A48;
+  --star:#FFC531; --bad:#FF7590; --bad-soft:#3D1F2C;
+  --shadow:0 1px 0 rgba(0,0,0,.2),0 12px 30px -14px rgba(0,0,0,.6);
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+#app{max-width:1080px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--div);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+p{margin:0}
+.big{background:var(--div);color:var(--on-accent);border:0;border-radius:14px;padding:14px 22px;font-weight:800;font-size:1.05rem;box-shadow:0 4px 0 var(--div-deep);transition:transform .08s}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--div-deep)}
+.ghost{background:transparent;border:2px solid var(--line);border-radius:14px;padding:12px 18px;font-weight:800;color:var(--ink)}
+.ghost:hover{border-color:var(--div);color:var(--div)}
+.link{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:var(--div)}
+
+/* ---------- Home ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:32px;align-items:center;padding-block:8px 32px}
+@media (max-width:760px){.hero{grid-template-columns:1fr;gap:24px}}
+.eyebrow{font-weight:800;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--div);margin-bottom:10px}
+h1{font-weight:800;font-size:clamp(2.3rem,6.2vw,3.7rem);line-height:1;letter-spacing:-.025em;margin-bottom:16px}
+h1 .div{color:var(--div);font-weight:800}
+.lede{max-width:46ch;color:var(--muted);font-size:1.06rem;margin-bottom:24px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.heroSheet{margin:0;justify-self:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.heroSheet .sheet{transform:rotate(-2.5deg)}
+.heroSheet figcaption{font-family:var(--f-num);color:var(--muted);font-size:.95rem}
+
+.secHead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.secHead h2{font-size:1.35rem;font-weight:800}
+.secHead p{color:var(--muted);font-size:.92rem}
+.estCard{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.estCard h3{font-size:1.05rem;font-weight:800;color:var(--x)}
+.estCard p{font-size:.92rem;color:var(--muted);line-height:1.45;max-width:70ch}
+.moves{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:36px}
+@media (max-width:760px){.moves{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.move{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.lt{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:1.15rem;background:var(--x-soft);color:var(--x)}
+.move h3{font-size:1.05rem;font-weight:800;color:var(--x)}
+.move p{font-size:.9rem;color:var(--muted);line-height:1.4}
+
+.stats{display:flex;flex-wrap:wrap;gap:12px 36px;margin-bottom:18px;padding:18px 20px;background:var(--card);border:1px solid var(--line);border-radius:18px}
+.stat{display:flex;flex-direction:column}
+.stat b{font-family:var(--f-num);font-weight:600;font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat b small{font-size:1rem;color:var(--muted);font-weight:500}
+.stat span{font-size:.8rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.levels{margin-bottom:36px}
+.lvl{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;padding-block:16px;border-top:1px solid var(--line);align-items:center}
+@media (max-width:640px){.lvl{grid-template-columns:1fr;gap:10px}}
+.lvl h3{font-size:1.08rem;font-weight:800}
+.lvl .lnum{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--div)}
+.lvl p{font-size:.88rem;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+.tile{aspect-ratio:1;max-width:100%;min-width:0;border-radius:9px;border:1.5px solid var(--line);background:var(--card);font-family:var(--f-num);font-size:clamp(.66rem,1.8vw,.85rem);color:var(--muted);display:grid;place-items:center;padding:0;transition:transform .1s}
+.tile:hover{transform:translateY(-2px);border-color:var(--div)}
+.tile.s1{background:var(--div-soft);border-color:transparent;color:var(--div)}
+.tile.s2{background:var(--div-mid);border-color:transparent;color:var(--ink)}
+.tile.s3{background:var(--div);border-color:transparent;color:var(--on-accent);font-weight:600}
+.tile.next{border:2.5px solid var(--div);color:var(--div);font-weight:600;animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{transform:scale(1.08)}}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.84rem;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px;border:1.5px solid var(--line);background:var(--card);display:inline-block}
+.legend i.s1{background:var(--div-soft);border-color:transparent}
+.legend i.s2{background:var(--div-mid);border-color:transparent}
+.legend i.s3{background:var(--div);border-color:transparent}
+
+.grown{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px}
+.grown .insight{max-width:62ch;margin-block:4px 16px}
+.bars{display:grid;gap:10px;max-width:560px}
+.bar{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:12px;align-items:center;font-weight:700;font-size:.92rem}
+.bar .track{height:14px;border-radius:99px;background:var(--soft);overflow:hidden}
+.bar .track i{display:block;height:100%;border-radius:inherit;background:var(--x)}
+.bar b{font-family:var(--f-num);font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.gfoot{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:18px;font-size:.88rem;color:var(--muted)}
+.confirm{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--bad-soft);color:var(--ink);font-weight:700}
+.confirm button{border:0;border-radius:10px;padding:8px 14px;font-weight:800}
+.confirm .yes{background:var(--bad);color:var(--on-accent)}
+.confirm .no{background:var(--card)}
+
+/* ---------- Sheet (squared copy) ---------- */
+.sheet{position:relative;flex:none;background-color:var(--paper);border-radius:14px;box-shadow:var(--shadow);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:var(--cell) var(--cell)}
+.inner{position:absolute}
+.c{position:absolute;width:var(--cell);height:var(--cell);display:grid;place-items:center;font-family:var(--f-num);font-weight:500;
+  font-size:calc(var(--cell)*.64);line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;border-radius:7px}
+.c.dv{font-weight:600}
+.c.q{color:var(--div);font-weight:600}
+.c.p{color:var(--mul)}
+.c.r{color:var(--sub)}
+.c.b{color:var(--bring);font-weight:600}
+.c.rl{color:var(--sub);font-size:calc(var(--cell)*.5);font-weight:600}
+.c.minus{color:var(--muted)}
+.c.hl-div{background:var(--div-soft)}
+.c.hl-mul{background:var(--mul-soft)}
+.c.hl-sub{background:var(--sub-soft)}
+.c.hl-bring{background:var(--bring-soft);color:var(--bring)}
+.c.slot{box-shadow:inset 0 0 0 2.5px var(--sc);background:var(--sc-soft);color:var(--sc);font-weight:600}
+.slot-divide{--sc:var(--div);--sc-soft:var(--div-soft)}
+.slot-multiply{--sc:var(--mul);--sc-soft:var(--mul-soft)}
+.slot-subtract{--sc:var(--sub);--sc-soft:var(--sub-soft)}
+.slot-bring{--sc:var(--bring);--sc-soft:var(--bring-soft);box-shadow:inset 0 0 0 2px var(--sc);background:transparent}
+.c.slot.caret:empty::after{content:"";width:2px;height:52%;background:var(--sc);animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.dot{position:absolute;width:calc(var(--cell)*.16);height:calc(var(--cell)*.16);border-radius:50%;background:var(--ink);transform:translate(-50%,-50%)}
+.dot.q{background:var(--div)}
+.ln{position:absolute;background:var(--ink);border-radius:2px}
+.bracket{position:absolute;overflow:visible}
+.bracket path{stroke:var(--ink)}
+.guide{position:absolute;width:0;border-left:2.5px dashed var(--bring)}
+.guide::after{content:"";position:absolute;left:-7px;bottom:-2px;border:6px solid transparent;border-top:8px solid var(--bring)}
+.pop{animation:pop .42s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:none;opacity:1}}
+.drop{animation:drop .65s cubic-bezier(.5,0,.3,1.25) both}
+@keyframes drop{from{transform:translateY(var(--dy));opacity:.5}to{transform:none;opacity:1}}
+.shake{animation:shake .38s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* ---------- Play ---------- */
+.ptop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.back{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-weight:800;font-size:.9rem;white-space:nowrap}
+.pinfo{text-align:center;min-width:0}
+.pq{font-family:var(--f-display);font-weight:800;font-size:1.15rem}
+.plev{font-size:.8rem;color:var(--muted);font-weight:700}
+.iconBtn{background:var(--card);border:1px solid var(--line);border-radius:12px;width:42px;height:42px;display:grid;place-items:center;color:var(--muted);flex:none}
+.pbar{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin:14px 0 20px}
+.pbar i{display:block;height:100%;background:var(--div);border-radius:inherit;transition:width .5s}
+.pgrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
+@media (max-width:840px){.pgrid{grid-template-columns:minmax(0,1fr);gap:16px}}
+.leftCol,.rightCol{min-width:0;display:flex;flex-direction:column;gap:16px}
+.paperWrap{display:flex;justify-content:center;overflow-x:auto;padding:6px 4px 10px}
+
+.prompt{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.chip{text-align:center;white-space:nowrap;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:6px 2px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.chip.on{background:var(--x);color:var(--on-accent)}
+.chip.did{background:var(--x-soft);color:var(--x)}
+.demoTag{font-size:.82rem;font-weight:800;color:var(--bring);background:var(--bring-soft);padding:6px 10px;border-radius:10px}
+.note{font-size:.9rem;color:var(--muted);display:flex;gap:6px;align-items:flex-start}
+.note svg{flex:none;margin-top:3px;color:var(--mul)}
+.pre{font-size:.95rem;color:var(--muted)}
+.pre b{color:var(--ink)}
+.ask{font-family:var(--f-display);font-weight:700;font-size:1.45rem;line-height:1.25}
+.ask .n{font-family:var(--f-num);font-weight:600;color:var(--x)}
+.ask.est{color:var(--est)}
+.sub{font-size:.92rem;color:var(--muted);margin-top:-6px}
+.ansRow{display:flex;align-items:center;gap:12px}
+.ansRow span.lbl{font-weight:800;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ans{display:inline-flex;align-items:center;justify-content:flex-end;min-width:3.2em;height:1.8em;padding:0 .35em;border-radius:12px;font-family:var(--f-num);font-weight:600;font-size:2rem;
+  box-shadow:inset 0 0 0 2.5px var(--x);background:var(--x-soft);color:var(--x);font-variant-numeric:tabular-nums}
+.ans:empty::after{content:"";width:2px;height:55%;background:var(--x);animation:blink 1s steps(2,start) infinite}
+.estOpts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.estBtn{border:0;border-radius:14px;padding:10px 4px;background:var(--est-soft);color:var(--est);box-shadow:inset 0 0 0 2px var(--est);display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.estBtn small{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.estBtn b{font-family:var(--f-num);font-size:1.5rem;font-weight:600;line-height:1.1}
+.estBtn:disabled{opacity:.35;cursor:default;text-decoration:line-through}
+.hint{font-size:.93rem;font-weight:700;padding:10px 12px;border-radius:12px;background:var(--bad-soft);color:var(--bad)}
+.hint.info{background:var(--soft);color:var(--muted)}
+.pbtns{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.big.bringBtn{background:var(--bring);box-shadow:0 4px 0 color-mix(in srgb,var(--bring) 65%,var(--ink));color:var(--on-accent);width:100%}
+
+.keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.key{height:58px;border-radius:14px;border:0;background:var(--card);box-shadow:0 3px 0 var(--line),inset 0 0 0 1px var(--line);font-family:var(--f-num);font-size:1.65rem;font-weight:500;color:var(--ink);transition:transform .06s}
+.key:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--line),inset 0 0 0 1px var(--line)}
+.key.go{background:var(--div);color:var(--on-accent);box-shadow:0 3px 0 var(--div-deep);font-family:var(--f-body);font-size:1.05rem;font-weight:800}
+.key.go.bring{background:var(--bring)}
+.key:disabled{opacity:.35;cursor:default}
+@media (max-width:840px){.key{height:52px}}
+
+.ladder{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.ladHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ladHead h3{font-size:.95rem;font-weight:800}
+.ladHead .link{padding:0}
+.ladCap{font-size:.84rem;color:var(--muted);margin-top:6px}
+.ladGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
+.lc{font-family:var(--f-num);font-size:.98rem;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 9px;display:flex;justify-content:space-between;gap:6px;font-variant-numeric:tabular-nums;min-width:0}
+.lc span{color:var(--muted)}
+.lc.on{background:var(--mul-soft);border-color:var(--mul);color:var(--mul);font-weight:600}
+.lc.on span{color:var(--mul)}
+
+.done{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.stars{display:flex;gap:6px}
+.stars svg{width:40px;height:40px}
+.stars .on{fill:var(--star)}
+.stars .off{fill:var(--soft)}
+.res{font-family:var(--f-num);font-size:2rem;font-weight:500;line-height:1.1}
+.res b{color:var(--div);font-weight:600}
+.res em{font-style:normal;color:var(--sub);font-weight:600}
+.chk{font-size:.95rem;color:var(--muted)}
+.chk b{color:var(--mul)}
+.chk i{font-style:normal;color:var(--est);font-weight:700}
+.msg{font-family:var(--f-display);font-weight:800;font-size:1.2rem}
+.lvlDone{background:var(--div-soft);color:var(--div);font-weight:800;padding:8px 12px;border-radius:10px}
+.done .big{width:100%}
+
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+</head>
+<body>
+<style>
+/* ---------- App shell: home-screen app on iPad ---------- */
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+body{padding-top:max(20px,calc(env(safe-area-inset-top,0px) + 12px));padding-bottom:max(48px,calc(env(safe-area-inset-bottom,0px) + 32px));
+  -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.key,.tile,.estBtn,.big,.ghost,.back,.iconBtn,.chip{-webkit-touch-callout:none}
+
+/* ---------- Welcome ---------- */
+#welcome{position:fixed;inset:0;z-index:100;overflow:hidden;display:grid;place-items:center;
+  padding:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px));
+  background:radial-gradient(120% 90% at 50% 38%,#33236F 0%,#1B1540 45%,#0B0918 100%);color:#F4F1FF;
+  transition:opacity .6s ease,transform .6s ease}
+#welcome.leaving{opacity:0;transform:scale(1.06);pointer-events:none}
+#sky{position:absolute;inset:0;width:100%;height:100%}
+.floaters{position:absolute;inset:0;pointer-events:none}
+.floaters span{position:absolute;bottom:-12vh;font-family:var(--f-num);font-weight:600;line-height:1;opacity:0;
+  animation:float var(--t) linear var(--d) infinite}
+@keyframes float{0%{transform:translateY(0) rotate(0);opacity:0}12%{opacity:var(--o)}85%{opacity:var(--o)}100%{transform:translateY(-125vh) rotate(var(--r));opacity:0}}
+.wcard{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;max-width:640px}
+.planet{position:relative;width:150px;height:150px;margin-bottom:6px;animation:bob 6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.planet svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.orbit{position:absolute;inset:-34px;transform:rotate(-18deg) scaleY(.36)}
+.orbit i{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(203,185,255,.35)}
+.orbit b{position:absolute;inset:0;animation:spin 7s linear infinite}
+.orbit b::before{content:"";position:absolute;left:50%;top:-9px;width:18px;height:18px;margin-left:-9px;border-radius:50%;
+  background:#FFC531;box-shadow:0 0 18px 4px rgba(255,197,49,.65)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hello{font-family:var(--f-body);font-weight:800;font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;color:#CBB9FF}
+.wcard h1{font-family:var(--f-display);font-weight:800;font-size:clamp(2.4rem,7vw,4.4rem);line-height:1.02;letter-spacing:-.025em;margin:0;color:#fff}
+.wcard h1 em{font-style:normal;background:linear-gradient(90deg,#FFC531,#FF7590 45%,#A88BFF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wsub{font-family:var(--f-num);font-size:1.15rem;color:#C9C2EA;min-height:1.5em}
+.wsub b{color:#FFC531;font-weight:600}
+.wgo{margin-top:10px;border:0;border-radius:18px;padding:18px 40px;font:800 1.25rem var(--f-body);color:#fff;background:#6C43EE;
+  box-shadow:0 5px 0 #4A26C2,0 18px 40px -12px rgba(108,67,238,.8);cursor:pointer;transition:transform .08s}
+.wgo:active{transform:translateY(4px);box-shadow:0 1px 0 #4A26C2}
+.wgo:focus-visible{outline:3px solid #FFC531;outline-offset:4px}
+.whint{font-size:.85rem;color:#8F88B8}
+@media (prefers-reduced-motion: reduce){.floaters,.orbit b,.planet{animation:none!important}.floaters{display:none}}
+</style>
+
+<div id="welcome" role="dialog" aria-label="Welcome">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="floaters" id="floaters" aria-hidden="true"></div>
+  <div class="wcard">
+    <div class="planet" aria-hidden="true">
+      <div class="orbit"><i></i><b></b></div>
+      <svg viewBox="0 0 150 150">
+        <defs>
+          <radialGradient id="pg" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#C6B3FF"/><stop offset=".55" stop-color="#7A52F2"/><stop offset="1" stop-color="#3A1E9E"/></radialGradient>
+        </defs>
+        <circle cx="75" cy="75" r="52" fill="url(#pg)"/>
+        <rect x="47" y="71" width="56" height="9" rx="4.5" fill="#fff"/>
+        <circle cx="75" cy="55" r="7.5" fill="#fff"/>
+        <circle cx="75" cy="96" r="7.5" fill="#fff"/>
+      </svg>
+    </div>
+    <p class="hello">Hi Molly</p>
+    <h1>Maths is the language of the <em>universe</em></h1>
+    <p class="wsub" id="wsub"></p>
+    <button class="wgo" id="wgo" type="button">Let’s go →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const W=document.getElementById('welcome');
+  // progress line, read from the same saved data the game uses
+  let done=0,stars=0;
+  try{const s=JSON.parse(localStorage.getItem('molly-division-ie-v2'));if(s&&s.results){for(const k in s.results){done++;stars+=s.results[k].best||0;}}}catch(e){}
+  document.getElementById('wsub').innerHTML=done===0?'100 questions are waiting for you.'
+    :done>=100?'All <b>100</b> done, with <b>'+stars+'</b> stars. Amazing!'
+    :'<b>'+done+'</b> of 100 done · <b>'+stars+'</b> stars so far';
+
+  // drifting maths symbols
+  const SYM=['÷','×','+','−','=','π','√','∞','%','7','3','9','½','∑','0.5','12'];
+  const COLS=['#A88BFF','#36D2C0','#FF7590','#FFBE3D','#7FAAFF','#FFC531'];
+  const F=document.getElementById('floaters');
+  for(let i=0;i<22;i++){
+    const s=document.createElement('span');
+    s.textContent=SYM[i%SYM.length];
+    s.style.cssText=`left:${(i*4.6+Math.random()*4)%100}%;font-size:${1.1+Math.random()*2.4}rem;color:${COLS[i%COLS.length]};`+
+      `--t:${16+Math.random()*16}s;--d:${-Math.random()*30}s;--o:${.25+Math.random()*.35};--r:${(Math.random()-.5)*120}deg`;
+    F.appendChild(s);
+  }
+
+  // twinkling stars + the odd shooting star
+  const cv=document.getElementById('sky'),ctx=cv.getContext('2d');
+  const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let stars2=[],shoot=null,w=0,h=0,raf=0,running=true;
+  function size(){const d=window.devicePixelRatio||1;w=innerWidth;h=innerHeight;cv.width=w*d;cv.height=h*d;ctx.setTransform(d,0,0,d,0,0);
+    stars2=Array.from({length:Math.round(w*h/5200)},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.4+.3,p:Math.random()*6.28,s:.6+Math.random()*1.8}));}
+  function frame(t){
+    ctx.clearRect(0,0,w,h);
+    for(const s of stars2){const a=still?.7:.35+.65*Math.abs(Math.sin(s.p+t/1000*s.s));ctx.globalAlpha=a;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill();}
+    if(!still){
+      if(!shoot&&Math.random()<.004)shoot={x:Math.random()*w*.7,y:Math.random()*h*.4,v:9+Math.random()*5,l:0};
+      if(shoot){shoot.l+=1;shoot.x+=shoot.v;shoot.y+=shoot.v*.45;
+        const g=ctx.createLinearGradient(shoot.x,shoot.y,shoot.x-90,shoot.y-40);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.globalAlpha=1;ctx.strokeStyle=g;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(shoot.x,shoot.y);ctx.lineTo(shoot.x-90,shoot.y-40);ctx.stroke();
+        if(shoot.l>60)shoot=null;}
+    }
+    ctx.globalAlpha=1;
+    if(running&&!still)raf=requestAnimationFrame(frame);
+  }
+  size();addEventListener('resize',()=>{if(running){size();if(still)frame(0);}});
+  if(still)frame(0);else raf=requestAnimationFrame(frame);
+
+  function go(){
+    if(W.classList.contains('leaving'))return;
+    W.classList.add('leaving');
+    setTimeout(()=>{running=false;cancelAnimationFrame(raf);W.remove();},600);
+  }
+  document.getElementById('wgo').addEventListener('click',go);
+  addEventListener('keydown',function k(e){if(e.key==='Enter'&&document.getElementById('welcome')){e.preventDefault();e.stopImmediatePropagation();go();removeEventListener('keydown',k,true);}},true);
+})();
+</script>
+
+<div id="app">
+  <section id="home"></section>
+  <section id="play" hidden></section>
+</div>
+<canvas id="fx"></canvas>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const ORD={estimate:-1,divide:0,multiply:1,subtract:2,bring:3,finish:4};
+const COL={estimate:'est',divide:'div',multiply:'mul',subtract:'sub',bring:'bring'};
+const NAME={estimate:'Estimate',divide:'Divide',multiply:'Multiply',subtract:'Subtract',bring:'Bring down'};
+const LEVELS=[
+  {name:'Warm-up',tag:'4th class revision',desc:'3-digit ÷ 1-digit, with and without remainders, like 372 ÷ 6.'},
+  {name:'Two-digit divisors',tag:'5th class',desc:'3-digit ÷ 2-digit. These all come out exactly.'},
+  {name:'Remainders',tag:'5th class',desc:'3-digit ÷ 2-digit, with something left over.'},
+  {name:'Decimals',tag:'5th class',desc:'A decimal ÷ a whole number, like 75.6 ÷ 4.'},
+  {name:'Stretch',tag:'Beyond 5th class',desc:'4-digit ÷ 2-digit, for when the rest feels easy.'}
+];
+const KEY='molly-division-ie-v2';
+const STAR='<path d="M12 2.6l2.85 5.9 6.5.9-4.72 4.55 1.15 6.45L12 17.35 6.22 20.4l1.15-6.45L2.65 9.4l6.5-.9z"/>';
+const TICK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+const SPK_ON='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const SPK_OFF='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>';
+
+/* ---------- storage ---------- */
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.seed&&s.results)return s;}catch(e){}return {seed:2026,results:{},muted:false};}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}}
+const store=load();
+
+/* ---------- numbers ---------- */
+function fmt(v,dp){if(!dp)return String(v);const s=String(v).padStart(dp+1,'0');return s.slice(0,-dp)+'.'+s.slice(-dp);}
+function sig1(x){if(x<10)return Math.max(1,Math.round(x));const p=Math.pow(10,Math.floor(Math.log10(x)));return Math.round(x/p)*p;}
+
+/* ---------- long division model ---------- */
+function solve(item){
+  const {M,d}=item,dp=item.dp||0;
+  const digits=String(M).split('').map(Number),n=digits.length;
+  let i=0,cur=digits[0];
+  while(cur<d&&i<n-1){i++;cur=cur*10+digits[i];}
+  const steps=[];let col=i,curStr=String(cur);
+  for(;;){
+    const q=Math.floor(cur/d),prod=q*d,rem=cur-prod;
+    steps.push({col,cur,curStr,curStart:steps.length===0?0:col-curStr.length+1,q,prod,rem});
+    if(col===n-1)break;
+    col++;curStr=String(rem)+digits[col];cur=rem*10+digits[col];
+  }
+  const Q=Math.floor(M/d),R=M%d;
+  // 1-digit divisor: compatible numbers (338 ÷ 7 → 350 ÷ 7 = 50). 2-digit: round the divisor to the nearest ten first.
+  const val=M/Math.pow(10,dp),dR=d<10?d:Math.round(d/10)*10;
+  const E2=d<10?sig1(val/dR):Math.max(1,Math.round(val/dR)),Nc=E2*dR,E=sig1(E2);
+  let opts=(E>=10&&E%10===0)?[E/10,E,E*10]:[E,E*10,E*100];
+  const rot=(M+d)%3;opts=opts.slice(rot).concat(opts.slice(0,rot));
+  return {M,d,dp,digits,n,startCol:i,steps,Q,R,Ntxt:fmt(M,dp),Qtxt:fmt(Q,dp),est:{dR,E,E2,Nc,opts}};
+}
+function dims(P){
+  const dl=String(P.d).length,off=dl+1,rCols=P.R>0?1+String(P.R).length:0;
+  return {dl,off,cols:off+P.n+rCols,rows:2+2*P.steps.length};
+}
+
+/* ---------- question set (Irish primary curriculum levels) ---------- */
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function genSet(seed){
+  const r=rng(seed),ri=(a,b)=>a+Math.floor(r()*(b-a+1)),out=[],seen=new Set();
+  const two=(lo,hi)=>{let d;do{d=ri(lo,hi);}while(d%10===0);return d;};
+  for(let i=0;i<100;i++){
+    for(let g=0;g<3000;g++){
+      let M,d,dp=0;
+      if(i<20){d=ri(3,9);
+        if(i<8)M=ri(Math.ceil(100/d),Math.floor(999/d))*d;else{M=ri(100,999);if(M%d===0)continue;}}
+      else if(i<40){d=i<30?ri(11,25):two(12,60);
+        const lo=Math.max(5,Math.ceil(100/d)),hi=Math.floor(999/d);if(hi<lo)continue;M=ri(lo,hi)*d;}
+      else if(i<60){d=two(12,99);M=ri(Math.max(100,2*d),999);if(M%d===0)continue;}
+      else if(i<80){
+        let Qi;
+        if(i<68){d=ri(3,9);dp=1;Qi=ri(100,999);}
+        else if(i<74){d=ri(2,9);dp=2;Qi=ri(100,999);}
+        else{d=ri(11,19);dp=1;Qi=ri(11,99);}
+        if(Qi%10===0)continue;M=Qi*d;if(M%10===0)continue;
+        const T=solve({M,d,dp});if(T.startCol>=T.n-dp)continue;
+      }
+      else{d=two(12,99);M=ri(1000,9999);}
+      const k=M+'/'+d+'/'+dp;if(seen.has(k))continue;seen.add(k);out.push({M,d,dp});break;
+    }
+  }
+  return out;
+}
+let SET=genSet(store.seed);
+
+/* ---------- sheet renderer ---------- */
+function sheetHTML(P,st,cell,opt){
+  opt=opt||{};
+  const {dl,off,cols,rows}=dims(P),steps=P.steps,k=st.k,ph=st.phase,fresh=st.fresh||new Set();
+  const past=(j,p)=>j<k||(j===k&&ORD[ph]>ORD[p]);
+  const hl={};const mark=(r,c,cls)=>{hl[r+','+c]=cls;};
+  let h='';
+  const C=(r,c,t,cls,key,style)=>{
+    const extra=hl[r+','+c]?' '+hl[r+','+c]:'';
+    h+=`<div class="c ${cls||''}${extra}${key&&fresh.has(key)?' pop':''}" style="left:${c*cell}px;top:${r*cell}px;${style||''}">${t}</div>`;
+  };
+  const L=(x,y,w,hh)=>{h+=`<div class="ln" style="left:${x}px;top:${y}px;width:${w}px;height:${hh}px"></div>`;};
+  const s=steps[k];
+  if(!opt.static&&s){
+    const curCells=cls=>{if(k===0){for(let c=0;c<=s.col;c++)mark(1,off+c,cls);}else{for(let c=s.curStart;c<=s.col;c++)mark(1+2*k,off+c,cls);}};
+    if(ph==='divide'){curCells('hl-div');for(let i=0;i<dl;i++)mark(1,i,'hl-div');}
+    if(ph==='multiply'){mark(0,off+s.col,'hl-mul');for(let i=0;i<dl;i++)mark(1,i,'hl-mul');}
+    if(ph==='subtract'){curCells('hl-sub');const ps=String(s.prod);for(let i=0;i<ps.length;i++)mark(2+2*k,off+s.col-ps.length+1+i,'hl-sub');}
+    if(ph==='bring')mark(1,off+s.col+1,'hl-bring');
+  }
+  String(P.d).split('').forEach((ch,i)=>C(1,i,ch,'dv'));
+  h+=`<svg class="bracket" style="left:${dl*cell}px;top:${cell}px;width:${cell}px;height:${cell}px" viewBox="0 0 20 40" preserveAspectRatio="none"><path d="M8 1 Q17 20 6 39" fill="none" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg>`;
+  L((dl+0.4)*cell,cell-1.5,(P.n+0.6)*cell-4,3);
+  P.digits.forEach((dg,i)=>C(1,off+i,dg,''));
+  if(P.dp){const x=(off+P.n-P.dp)*cell;h+=`<div class="dot" style="left:${x}px;top:${1.8*cell}px"></div><div class="dot q" style="left:${x}px;top:${0.8*cell}px"></div>`;}
+  steps.forEach((t,j)=>{
+    if(past(j,'divide'))C(0,off+t.col,t.q,'q','q'+j);
+    const pr=2+2*j,rr=3+2*j;
+    if(j<k||(j===k&&ORD[ph]>=1)){
+      C(pr,off+t.curStart-1,'−','minus');
+      L((off+t.curStart)*cell+4,(pr+1)*cell-1.5,(t.col-t.curStart+1)*cell-8,3);
+    }
+    if(past(j,'multiply')){const ps=String(t.prod);for(let i=0;i<ps.length;i++)C(pr,off+t.col-ps.length+1+i,ps[i],'p','p'+j);}
+    if(past(j,'subtract')){const rs=String(t.rem);for(let i=0;i<rs.length;i++)C(rr,off+t.col-rs.length+1+i,rs[i],'r','r'+j);}
+    if(j<k){
+      const dropping=st.drop==='b'+j;
+      C(rr,off+t.col+1,P.digits[t.col+1],'b'+(dropping?' drop':''),dropping?null:'b'+j,dropping?`--dy:${-(rr-1)*cell}px`:'');
+    }
+  });
+  if(ph==='finish'&&P.R>0){
+    C(0,off+P.n,'R','rl','R');
+    String(P.R).split('').forEach((ch,i)=>C(0,off+P.n+1+i,ch,'r','R'));
+  }
+  if(!opt.static&&s){
+    const sh=st.shake?' shake':'';
+    if(ph==='divide'){C(0,off+s.col,st.input,`slot slot-divide caret${sh}`);}
+    else if(ph==='multiply'||ph==='subtract'){
+      const row=ph==='multiply'?2+2*k:3+2*k,inp=st.input,len=Math.max(inp.length,1);
+      for(let i=0;i<len;i++){const ch=inp.length?inp[i]:'';C(row,off+s.col-len+1+i,ch,`slot slot-${ph}${inp.length?'':' caret'}${sh}`);}
+    }else if(ph==='bring'){
+      const tr=3+2*k,c=off+s.col+1;
+      h+=`<div class="guide" style="left:${(c+0.5)*cell-1}px;top:${2*cell+4}px;height:${(tr-2)*cell-8}px"></div>`;
+      C(tr,c,'','slot slot-bring');
+    }
+  }
+  const W=(cols+2)*cell,H=(rows+2)*cell;
+  return `<div class="sheet" style="--cell:${cell}px;width:${W}px;height:${H}px" role="img" aria-label="${P.Ntxt} divided by ${P.d}, worked as long division"><div class="inner" style="left:${cell}px;top:${cell}px">${h}</div></div>`;
+}
+
+/* ---------- sound + confetti ---------- */
+let actx=null;
+function tone(f,dur,type,vol,delay){
+  if(store.muted)return;
+  try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+(delay||0);
+    o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||.07,t+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+dur+.05);}catch(e){}
+}
+const sGood=()=>{tone(660,.12);tone(990,.16,'sine',.06,.07);};
+const sBad=()=>tone(210,.2,'triangle',.07);
+const sDrop=()=>{tone(520,.1,'sine',.05);tone(390,.14,'sine',.05,.08);};
+const sWin=n=>{[523,659,784,1047].slice(0,n+1).forEach((f,i)=>tone(f,.28,'sine',.07,i*.11));};
+function confetti(big){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cv=$('#fx'),ctx=cv.getContext('2d'),dpr=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;ctx.scale(dpr,dpr);
+  const cs=getComputedStyle(document.documentElement),cols=['--div','--mul','--sub','--bring','--star','--est'].map(v=>cs.getPropertyValue(v).trim());
+  const ps=[...Array(big?150:60)].map(()=>({x:W/2+(Math.random()-.5)*160,y:H*.42,vx:(Math.random()-.5)*15,vy:-Math.random()*14-5,s:5+Math.random()*7,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now();
+  (function f(t){const el=t-t0;ctx.clearRect(0,0,W,H);
+    ps.forEach(p=>{p.vy+=.42;p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.globalAlpha=Math.max(0,1-el/1900);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);ctx.restore();});
+    if(el<1900)requestAnimationFrame(f);else ctx.clearRect(0,0,W,H);})(t0);
+}
+
+/* ---------- state ---------- */
+let screen='home',P=null,S=null,idx=0,demoToken=0,ladderOpen=false,confirmKind=null;
+const blank=demo=>({k:0,phase:'estimate',input:'',estTried:[],wrong:0,helps:0,errs:{estimate:0,divide:0,multiply:0,subtract:0},stepWrong:0,hint:'',hintInfo:false,note:'',fresh:new Set(),drop:null,shake:false,demo:!!demo,done:null});
+const nextIdx=()=>{for(let i=0;i<100;i++)if(!store.results[i])return i;return -1;};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const DEMO={M:935,d:23,dp:0};
+
+/* ---------- home ---------- */
+function renderHome(){
+  const nx=nextIdx(),done=Object.keys(store.results).length;
+  let stars=0,firstRight=0,H=0;const E={estimate:0,divide:0,multiply:0,subtract:0};
+  for(const key in store.results){const r=store.results[key];stars+=r.best;if(r.first.w===0&&r.first.h===0)firstRight++;H+=r.first.h;for(const p in E)E[p]+=r.first.e[p]||0;}
+  const demoP=solve(DEMO),last=demoP.steps.length-1;
+  const heroCell=innerWidth<420?32:38;
+  const goLabel=nx===-1?'All 100 done. Play any question':(done===0?'Start question 1':`Continue: question ${nx+1}`);
+  const moves=[['divide','D','How many times does the divisor fit? With a 2-digit divisor, use the ladder of multiples.'],
+    ['multiply','M','Times your answer by the divisor. Write it underneath.'],
+    ['subtract','S','Take it away. What’s left must be smaller than the divisor.'],
+    ['bring','B','Pull the next digit down beside what’s left, then start again.']];
+  const totalE=E.estimate+E.divide+E.multiply+E.subtract;
+  let insight;
+  if(done===0)insight='Slips are tracked by step once questions are answered, so you can see exactly which part causes trouble.';
+  else if(totalE===0)insight='No slips yet on first attempts. Every step has been clean.';
+  else{
+    const top=Object.keys(E).sort((a,b)=>E[b]-E[a])[0];
+    insight={estimate:'Most slips so far are in Estimating. Rounding to friendly numbers (338 ÷ 7 is about 350 ÷ 7) is worth practising on its own.',
+      divide:'Most slips so far are in Divide, which is judging how many times the divisor fits. Practising tables backwards (“how many 7s in 50?”) targets this directly.',
+      multiply:'Most slips so far are in Multiply. That’s times tables rather than long division itself, so quick tables practice will lift the score fastest.',
+      subtract:'Most slips so far are in Subtract, usually where renaming (borrowing) is needed. A few column-subtraction drills will help.'}[top];
+  }
+  const maxE=Math.max(1,E.estimate,E.divide,E.multiply,E.subtract);
+  $('#home').innerHTML=`
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Long division · Irish primary maths curriculum</p>
+      <h1>Molly’s <span class="div">Division</span> Challenge</h1>
+      <p class="lede">100 questions that follow the primary maths curriculum, from 4th class revision to the 5th class goals: dividing by two-digit numbers and dividing decimals. Estimate first, then use the same four moves every time.</p>
+      <div class="ctas">
+        <button class="big" data-act="go">${goLabel}</button>
+        <button class="ghost" data-act="demo">Watch an example</button>
+      </div>
+    </div>
+    <figure class="heroSheet">${sheetHTML(demoP,{k:last,phase:'finish'},heroCell,{static:true})}<figcaption>935 ÷ 23 = 40 R15</figcaption></figure>
+  </header>
+  <div class="secHead"><h2>How every question works</h2><p>Estimate, then Divide → Multiply → Subtract → Bring down. Repeat.</p></div>
+  <div class="estCard" style="--x:var(--est);--x-soft:var(--est-soft)"><div class="lt">E</div><div><h3>Estimate first</h3><p>Round to friendly numbers before you start. 338 ÷ 7 is about 350 ÷ 7 = 50, so the answer should be close to 50. At the end, check your answer is near your estimate.</p></div></div>
+  <section class="moves">${moves.map(([p,l,t])=>`<div class="move" style="--x:var(--${COL[p]});--x-soft:var(--${COL[p]}-soft)"><div class="lt">${l}</div><h3>${NAME[p]}</h3><p>${t}</p></div>`).join('')}</section>
+  <div class="secHead"><h2>Progress</h2><p>Tap any square to play that question.</p></div>
+  <section class="stats">
+    <div class="stat"><b>${done}<small> / 100</small></b><span>Done</span></div>
+    <div class="stat"><b>${stars}<small> / 300</small></b><span>Stars</span></div>
+    <div class="stat"><b>${done?Math.round(firstRight/done*100)+'%':'–'}</b><span>Right first time</span></div>
+  </section>
+  <section class="levels">
+    ${LEVELS.map((L,li)=>`<div class="lvl"><div><div class="lnum">Level ${li+1} · ${L.tag}</div><h3>${L.name}</h3><p>${L.desc} Q${li*20+1}–${li*20+20}.</p></div>
+      <div class="tiles">${Array.from({length:20},(_,j)=>{const i=li*20+j,r=store.results[i];const cls=r?'s'+r.best:(i===nx?'next':'');
+        return `<button class="tile ${cls}" data-q="${i}" aria-label="Question ${i+1}${r?', '+r.best+' stars':''}">${i+1}</button>`;}).join('')}</div></div>`).join('')}
+    <div class="legend"><span><i></i>Not done</span><span><i class="s1"></i>1 star</span><span><i class="s2"></i>2 stars</span><span><i class="s3"></i>3 stars, no slips</span></div>
+  </section>
+  <section class="grown">
+    <div class="secHead"><h2>For grown-ups</h2><p>First attempts only</p></div>
+    <p class="insight">${insight}</p>
+    <div class="bars">${['estimate','divide','multiply','subtract'].map(p=>`<div class="bar" style="--x:var(--${COL[p]})"><span>${NAME[p]}</span><div class="track"><i style="width:${E[p]/maxE*100}%"></i></div><b>${E[p]}</b></div>`).join('')}</div>
+    <div class="gfoot"><span>“Show me” used ${H} time${H===1?'':'s'}. Progress is saved on this device.</span>
+      <button class="link" data-act="ask-clear">Clear progress</button><button class="link" data-act="ask-new">New set of 100</button></div>
+    ${confirmKind?`<div class="confirm"><span>${confirmKind==='clear'?'Wipe all stars and results?':'Make 100 new questions and wipe all results?'}</span><button class="yes" data-act="${confirmKind==='clear'?'do-clear':'do-new'}">Yes</button><button class="no" data-act="cancel">Cancel</button></div>`:''}
+  </section>`;
+}
+$('#home').addEventListener('click',e=>{
+  const t=e.target.closest('[data-act],[data-q]');if(!t)return;
+  if(t.dataset.q!==undefined)return startQ(+t.dataset.q);
+  const a=t.dataset.act;
+  if(a==='go'){const nx=nextIdx();startQ(nx===-1?0:nx);}
+  else if(a==='demo')startDemo();
+  else if(a==='ask-clear'){confirmKind='clear';renderHome();}
+  else if(a==='ask-new'){confirmKind='new';renderHome();}
+  else if(a==='cancel'){confirmKind=null;renderHome();}
+  else if(a==='do-clear'){store.results={};save();confirmKind=null;renderHome();}
+  else if(a==='do-new'){store.seed=Math.floor(Math.random()*1e9)+1;store.results={};SET=genSet(store.seed);save();confirmKind=null;renderHome();}
+});
+
+/* ---------- play ---------- */
+function buildPlay(){
+  $('#play').innerHTML=`
+  <header class="ptop">
+    <button class="back" data-act="home">← All questions</button>
+    <div class="pinfo"><div class="pq" id="pq"></div><div class="plev" id="plev"></div></div>
+    <button class="iconBtn" id="mute" aria-label="Sound on or off"></button>
+  </header>
+  <div class="pbar"><i id="pbar"></i></div>
+  <div class="pgrid">
+    <div class="leftCol"><div class="paperWrap" id="paper"></div><div class="ladder" id="ladder"></div></div>
+    <div class="rightCol">
+      <div class="prompt" id="prompt" aria-live="polite"></div>
+      <div class="keys" id="keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="key" data-k="${n}">${n}</button>`).join('')}
+        <button class="key" data-k="del" aria-label="Delete">⌫</button><button class="key" data-k="0">0</button><button class="key go" data-k="go" id="goKey">Check</button></div>
+    </div>
+  </div>`;
+}
+function playCell(){
+  const w=$('#paper').clientWidth-8,{cols,rows}=dims(P);
+  const byW=Math.floor(w/(cols+2)),byH=Math.floor((innerWidth>840?innerHeight*.66:innerHeight*.5)/(rows+2));
+  return Math.max(22,Math.min(56,byW,Math.max(30,byH)));
+}
+function renderSheet(){$('#paper').innerHTML=sheetHTML(P,S,playCell());}
+function chipsHTML(){
+  return `<div class="chips">${['divide','multiply','subtract','bring'].map(p=>{
+    const cls=S.phase==='finish'?'did':(p===S.phase?'on':(ORD[p]<ORD[S.phase]?'did':''));
+    return `<div class="chip ${cls}" style="--x:var(--${COL[p]});--x-soft:var(--${COL[p]}-soft)">${NAME[p]}</div>`;}).join('')}</div>`;
+}
+function promptHTML(){
+  const s=P.steps[S.k],d=P.d,ph=S.phase;
+  let h=chipsHTML();
+  if(S.demo)h+=`<p class="demoTag">Example: just watch how it works</p>`;
+  if(ph==='finish')return h+finishHTML();
+  if(ph==='estimate'){
+    h+=`<div class="ask est">Estimate first</div><p class="sub">About how big will the answer to ${P.Ntxt} ÷ ${d} be?</p>
+      <div class="estOpts">${P.est.opts.map(v=>`<button class="estBtn" data-est="${v}"${S.estTried.includes(v)||S.demo?' disabled':''}><small>about</small><b>${v}</b></button>`).join('')}</div>`;
+    if(S.hint)h+=`<p class="hint">${S.hint}</p>`;
+    return h;
+  }
+  if(S.note)h+=`<p class="note">${TICK}<span>${S.note}</span></p>`;
+  const x=`style="--x:var(--${COL[ph]});--x-soft:var(--${COL[ph]}-soft)"`;
+  const n=v=>`<span class="n">${v}</span>`;
+  if(ph==='divide'){
+    if(S.k===0&&P.startCol>0)h+=`<p class="pre">${d} can’t go into ${P.digits.slice(0,P.startCol).join('')}, so start with <b>${s.cur}</b>.</p>`;
+    if(S.k===0&&P.dp)h+=`<p class="pre">The decimal point goes straight up into the answer, above the point in ${P.Ntxt}.</p>`;
+    if(d>=10){h+=`<div ${x}><div class="ask">How many ${n(d)}s can you take away from ${n(s.cur)}?</div></div><p class="sub">Find the biggest one in the ladder that isn’t more than ${s.cur}.</p>`;}
+    else h+=`<div ${x}><div class="ask">How many ${n(d)}s fit into ${n(s.cur)}?</div></div>`;
+  }else if(ph==='multiply'){
+    h+=`<div ${x}><div class="ask">${n(s.q)} × ${n(d)} = ?</div></div><p class="sub">Write it under ${s.curStr}.</p>`;
+  }else if(ph==='subtract'){
+    h+=`<div ${x}><div class="ask">${n(s.cur)} − ${n(s.prod)} = ?</div></div><p class="sub">How much is left over?</p>`;
+  }else if(ph==='bring'){
+    const dg=P.digits[s.col+1];
+    h+=`<div ${x}><div class="ask">Bring down the ${n(dg)}</div></div><p class="sub">It goes next to the ${s.rem}, making ${s.rem*10+dg}.</p>`;
+    if(!S.demo)h+=`<button class="big bringBtn" data-act="bring">Bring it down ↓</button>`;
+    return h;
+  }
+  h+=`<div class="ansRow" ${x}><span class="lbl">Answer</span><span class="ans${S.shake?' shake':''}">${S.input}</span></div>`;
+  if(S.hint)h+=`<p class="hint${S.hintInfo?' info':''}">${S.hint}</p>`;
+  if(!S.demo)h+=`<div class="pbtns"><span></span><button class="link" data-act="show">Show me this step</button></div>`;
+  return h;
+}
+function finishHTML(){
+  const st=S.done?S.done.stars:3;
+  const stars=`<div class="stars" aria-label="${st} stars">${[0,1,2].map(i=>`<svg viewBox="0 0 24 24" class="${i<st?'on pop':'off'}" style="animation-delay:${i*.12}s">${STAR}</svg>`).join('')}</div>`;
+  const res=`<div class="res">${P.Ntxt} ÷ ${P.d} = <b>${P.Qtxt}</b>${P.R?` <em>R${P.R}</em>`:''}</div>`;
+  const chk=(P.R?`Check: ${P.Q} × ${P.d} = ${P.Q*P.d}, plus ${P.R} left over = <b>${P.Ntxt}</b> ✓`:`Check: ${P.Qtxt} × ${P.d} = <b>${P.Ntxt}</b> ✓`)
+    +`<br>Estimate was <i>about ${P.est.E}</i>, and ${P.Qtxt} is close to it ✓`;
+  if(S.demo){
+    const nx=nextIdx();
+    return `<div class="done">${res}<p class="chk">${chk}</p><p class="msg">That’s the whole method. Your turn!</p><button class="big" data-act="mine">Start question ${(nx===-1?0:nx)+1} →</button></div>`;
+  }
+  const msg=st===3?'Perfect. No slips!':st===2?'Nice work!':'Done! Come back later to win more stars.';
+  let lv='';
+  if((idx+1)%20===0){const li=Math.floor(idx/20);lv=`<p class="lvlDone">Level ${li+1} complete!${li<4?` Next up: ${LEVELS[li+1].name}.`:' That was the last level.'}</p>`;}
+  return `<div class="done">${stars}${res}<p class="chk">${chk}</p><p class="msg">${msg}</p>${lv}<button class="big" data-act="next">${idx===99?'Back to all questions':'Next question →'}</button></div>`;
+}
+function renderLadder(){
+  const d=P.d,s=P.steps[S.k],showQ=['multiply','subtract','bring'].includes(S.phase)?s.q:-1;
+  $('#ladder').innerHTML=`<div class="ladHead"><h3>${d} times table</h3><button class="link" data-act="ladder">${ladderOpen?'Hide':'Show'}</button></div>`+
+    (ladderOpen?(d>=10?`<p class="ladCap">Long division is quick repeated subtraction: take away as many ${d}s as you can.</p>`:'')+
+    `<div class="ladGrid">${[1,2,3,4,5,6,7,8,9].map(m=>`<div class="lc${m===showQ?' on':''}"><span>${m} ×</span>${m*d}</div>`).join('')}</div>`:'');
+}
+function renderKeys(){
+  const typing=['divide','multiply','subtract'].includes(S.phase),go=$('#goKey');
+  document.querySelectorAll('#keys .key').forEach(b=>{b.disabled=S.demo||S.phase==='estimate'||(!typing&&b.dataset.k!=='go');});
+  go.classList.toggle('bring',S.phase==='bring');
+  go.textContent=S.phase==='bring'?'↓':S.phase==='finish'?'Next':'Check';
+}
+function renderPlay(){
+  const li=Math.floor(idx/20);
+  $('#pq').textContent=S.demo?`Example: ${P.Ntxt} ÷ ${P.d}`:`Question ${idx+1} of 100`;
+  $('#plev').textContent=S.demo?'Estimate, then the four moves':`Level ${li+1} · ${LEVELS[li].name} · ${LEVELS[li].tag}`;
+  $('#pbar').style.width=Object.keys(store.results).length+'%';
+  $('#mute').innerHTML=store.muted?SPK_OFF:SPK_ON;
+  renderSheet();
+  $('#prompt').innerHTML=promptHTML();
+  renderKeys();renderLadder();
+  S.fresh=new Set();S.drop=null;S.shake=false;
+}
+
+function correct(){const s=P.steps[S.k];return S.phase==='divide'?s.q:S.phase==='multiply'?s.prod:s.rem;}
+function maxLen(){const s=P.steps[S.k];return S.phase==='divide'?1:S.phase==='multiply'?s.curStr.length+1:s.curStr.length;}
+function hintFor(g){
+  const s=P.steps[S.k],d=P.d;let t;
+  if(S.phase==='divide'){
+    t=g*d>s.cur?`Too many. ${g} × ${d} = ${g*d}, which is bigger than ${s.cur}.`
+      :`Not enough. ${g} × ${d} = ${g*d}, which leaves ${s.cur-g*d}. That’s still ${d} or more, so you can take away another ${d}.`;
+  }else if(S.phase==='multiply'){
+    if(s.q===0)t='Anything times 0 is 0.';
+    else if(d>=10){const T=Math.floor(d/10)*10,O=d%10;t=`Split it up: ${s.q} × ${T} = ${s.q*T}`+(O?` and ${s.q} × ${O} = ${s.q*O}. Add them together.`:'.');}
+    else t=`Count up in ${d}s, ${s.q} times: ${s.q===1?d:d+', '+2*d+(s.q>2?', …':'')}`;
+  }else t=`Not quite. Count up from ${s.prod} to ${s.cur}. How big is the jump?`;
+  if(S.stepWrong>=2)t+=' Stuck? Tap “Show me this step”.';
+  return t;
+}
+function recap(ph,s){
+  const d=P.d;
+  if(ph==='divide')return s.q===0?`${d} is bigger than ${s.cur}, so it fits 0 times.`:`${d} fits into ${s.cur} ${s.q} time${s.q>1?'s':''}. (${s.q+1} × ${d} = ${(s.q+1)*d} would be too many.)`;
+  if(ph==='multiply')return `${s.q} × ${d} = ${s.prod}.`;
+  if(ph==='subtract')return `${s.cur} − ${s.prod} = ${s.rem}.`;
+  const dg=P.digits[s.col+1];return `Brought down the ${dg}. Now we have ${s.rem*10+dg}.`;
+}
+function estimateNote(){const e=P.est;return `${P.Ntxt} ÷ ${P.d} is about ${e.Nc} ÷ ${e.dR} = ${e.E2}`+(e.E2!==e.E?`, so roughly ${e.E}.`:`. Expect an answer near ${e.E}.`);}
+function chooseEst(v){
+  if(S.phase!=='estimate')return;
+  if(v===P.est.E){S.note=estimateNote();S.hint='';S.phase='divide';sGood();renderPlay();return;}
+  if(!S.estTried.includes(v)){S.estTried.push(v);S.wrong++;S.errs.estimate++;}
+  const e=P.est;
+  S.hint=(P.d>=10?`Round ${P.d} to ${e.dR}. `:'')+`${P.Ntxt} is close to ${e.Nc}. What’s ${e.Nc} ÷ ${e.dR}? Pick the option nearest to that.`;
+  sBad();renderPlay();
+}
+function advance(){
+  const j=S.k,s=P.steps[j],ph=S.phase;
+  S.input='';S.hint='';S.hintInfo=false;S.stepWrong=0;S.note=recap(ph,s);
+  if(ph==='divide'){S.phase='multiply';S.fresh=new Set(['q'+j]);}
+  else if(ph==='multiply'){S.phase='subtract';S.fresh=new Set(['p'+j]);}
+  else if(ph==='subtract'){S.fresh=new Set(['r'+j]);if(j===P.steps.length-1){S.phase='finish';S.fresh.add('R');finishQ();}else S.phase='bring';}
+  renderPlay();
+}
+function doBring(){
+  const j=S.k,s=P.steps[j];S.note=recap('bring',s);S.k++;S.phase='divide';S.drop='b'+j;S.fresh=new Set(['b'+j]);sDrop();renderPlay();
+}
+function submit(){
+  if(S.phase==='estimate')return;
+  if(S.phase==='bring')return doBring();
+  if(S.phase==='finish')return S.demo?null:nextQ();
+  if(S.input===''){S.hint='Type your answer on the keypad, then press Check.';S.hintInfo=true;renderPlay();return;}
+  const g=parseInt(S.input,10);
+  if(g===correct()){sGood();advance();}
+  else{S.wrong++;S.errs[S.phase]++;S.stepWrong++;S.hint=hintFor(g);S.hintInfo=false;S.shake=true;S.input='';sBad();renderPlay();}
+}
+function showMe(){S.helps++;sGood();advance();}
+function finishQ(){
+  const pen=S.wrong+2*S.helps,stars=pen===0?3:pen<=2?2:1;S.done={stars};
+  if(!S.demo){const prev=store.results[idx];
+    store.results[idx]={first:prev?prev.first:{w:S.wrong,h:S.helps,e:{...S.errs},s:stars},best:Math.max(stars,prev?prev.best:0)};save();}
+  setTimeout(()=>{confetti(stars===3||S.demo);sWin(stars);},280);
+}
+function press(k){
+  if(S.demo)return;
+  if(S.phase==='estimate'){const i=+k-1;if(i>=0&&i<3)chooseEst(P.est.opts[i]);return;}
+  if(k==='go')return submit();
+  if(!['divide','multiply','subtract'].includes(S.phase))return;
+  if(k==='del')S.input=S.input.slice(0,-1);
+  else{const m=maxLen();if(m===1)S.input=k;else if(S.input.length<m)S.input+=k;}
+  renderSheet();$('#prompt').innerHTML=promptHTML();S.fresh=new Set();S.drop=null;S.shake=false;
+}
+
+function show(which){screen=which;$('#home').hidden=which!=='home';$('#play').hidden=which!=='play';window.scrollTo({top:0});}
+function startQ(i){demoToken++;idx=i;P=solve(SET[i]);S=blank(false);ladderOpen=P.d>=10;buildPlay();show('play');renderPlay();}
+function nextQ(){if(idx>=99)return goHome();startQ(idx+1);}
+function goHome(){demoToken++;confirmKind=null;renderHome();show('home');}
+async function startDemo(){
+  const token=++demoToken;P=solve(DEMO);S=blank(true);ladderOpen=true;buildPlay();show('play');renderPlay();
+  await wait(2600);if(token!==demoToken)return;
+  S.note=estimateNote();S.phase='divide';sGood();renderPlay();
+  while(token===demoToken&&S.phase!=='finish'){
+    if(S.phase==='bring'){await wait(2400);if(token!==demoToken)return;doBring();continue;}
+    await wait(2200);if(token!==demoToken)return;
+    for(const ch of String(correct())){S.input+=ch;renderSheet();$('#prompt').innerHTML=promptHTML();await wait(320);if(token!==demoToken)return;}
+    await wait(700);if(token!==demoToken)return;sGood();advance();
+  }
+}
+
+document.addEventListener('click',e=>{
+  if(screen!=='play')return;
+  if(e.target.closest('#mute')){store.muted=!store.muted;save();$('#mute').innerHTML=store.muted?SPK_OFF:SPK_ON;return;}
+  const k=e.target.closest('[data-k]');if(k)return press(k.dataset.k);
+  const est=e.target.closest('[data-est]');if(est&&!S.demo)return chooseEst(+est.dataset.est);
+  const a=e.target.closest('[data-act]');if(!a)return;
+  const act=a.dataset.act;
+  if(act==='home')goHome();
+  else if(act==='bring')doBring();
+  else if(act==='show')showMe();
+  else if(act==='next')nextQ();
+  else if(act==='mine'){const nx=nextIdx();startQ(nx===-1?0:nx);}
+  else if(act==='ladder'){ladderOpen=!ladderOpen;renderLadder();}
+});
+document.addEventListener('keydown',e=>{
+  if(screen!=='play')return;
+  if(e.key==='Escape')return goHome();
+  if(S.demo)return;
+  if(/^[0-9]$/.test(e.key)){press(e.key);e.preventDefault();}
+  else if(e.key==='Backspace'){press('del');e.preventDefault();}
+  else if(e.key==='Enter'){press('go');e.preventDefault();}
+});
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(screen==='play')renderSheet();},120);});
+
+renderHome();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
